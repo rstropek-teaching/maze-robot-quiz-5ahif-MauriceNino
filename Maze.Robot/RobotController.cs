@@ -1,5 +1,8 @@
-﻿using Maze.Library;
+using Maze.Library;
+using System.Collections.Generic;
+using System.Drawing;
 
+//HÜ
 namespace Maze.Solver
 {
     /// <summary>
@@ -19,6 +22,7 @@ namespace Maze.Solver
             this.robot = robot;
         }
 
+
         /// <summary>
         /// Moves the robot to the exit
         /// </summary>
@@ -29,17 +33,52 @@ namespace Maze.Solver
         /// the exit is not reachable, it has to call <see cref="IRobot.HaltAndCatchFire"/>
         /// and exit.
         /// </remarks>
+        private bool reachedEnd = false;
+        public HashSet<Point> alreadyChecked { get; private set; }
         public void MoveRobotToExit()
         {
-            // Here you have to add your code
+            Point startPoint = new Point(0, 0);
+            alreadyChecked = new HashSet<Point>();
 
-            // Trivial sample algorithm that can just move right
-            var reachedEnd = false;
             robot.ReachedExit += (_, __) => reachedEnd = true;
 
-            while (!reachedEnd)
+            CheckPoint(startPoint);
+
+            if (reachedEnd == false)
+                robot.HaltAndCatchFire();
+        }
+        public void CheckPoint(Point currentPoint)
+        {
+            if (alreadyChecked.Contains(currentPoint) == false && reachedEnd == false)
             {
-                robot.Move(Direction.Right);
+                alreadyChecked.Add(currentPoint);
+                if (robot.TryMove(Direction.Left) == true)
+                {
+                    Point newtestpoint = new Point(currentPoint.X - 1, currentPoint.Y);
+                    CheckPoint(newtestpoint);
+                    if (reachedEnd == false) { robot.Move(Direction.Right); }
+                }
+
+                if (reachedEnd == false && robot.TryMove(Direction.Right) == true)
+                {
+                    Point newtestpoint = new Point(currentPoint.X + 1, currentPoint.Y);
+                    CheckPoint(newtestpoint);
+                    if (reachedEnd == false) { robot.Move(Direction.Left); }
+                }
+
+                if (reachedEnd == false && robot.TryMove(Direction.Down) == true)
+                {
+                    Point newtestpoint = new Point(currentPoint.X, currentPoint.Y + 1);
+                    CheckPoint(newtestpoint);
+                    if (reachedEnd == false) { robot.Move(Direction.Up); }
+                }
+
+                if (reachedEnd == false && robot.TryMove(Direction.Up) == true)
+                {
+                    Point newtestpoint = new Point(currentPoint.X, currentPoint.Y - 1);
+                    CheckPoint(newtestpoint);
+                    if (reachedEnd == false) { robot.Move(Direction.Down); }
+                }
             }
         }
     }
